@@ -271,6 +271,179 @@ public class FCAlertView: UIView {
         }
     }
     
+    func setupDoneButton(fontSize : CGFloat) -> UIButton{
+        let doneButton = UIButton(type: .system)
+        
+        if let colorScheme = colorScheme {
+            doneButton.backgroundColor = colorScheme
+            doneButton.tintColor = .white
+        }else{
+            doneButton.backgroundColor = .white
+        }
+        
+        doneButton.setTitle(doneTitle, for: .normal)
+        doneButton.addTarget(self, action: #selector(self.donePressed(sender:)), for: .touchUpInside)
+        doneButton.titleLabel?.font = UIFont.systemFont(ofSize: fontSize, weight: UIFont.Weight.medium)
+        return doneButton
+    }
+    
+    func setupDifferentButton(index : Int) -> UIButton?{
+        
+        guard let titles = buttonTitles, titles.count > index else{
+            return nil
+        }
+        
+        let button = UIButton(type: .system)
+        button.backgroundColor = .white
+        
+        button.setTitle(titles[index], for: .normal)
+        button.addTarget(self, action: #selector(self.handleButton(sender:)), for: .touchUpInside)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: UIFont.Weight.regular)
+        button.tintColor = colorScheme
+        button.titleLabel?.adjustsFontSizeToFitWidth = true
+        button.titleLabel?.minimumScaleFactor = 0.8
+        button.tag = index
+        
+        return button
+    }
+    
+    func setupSeperator(frame : CGRect) -> UIView{
+        let seperator = UIView(frame: frame)
+        seperator.backgroundColor = UIColor(white: 100/255, alpha: 1)
+        
+        let blurEffect = UIBlurEffect(style: .extraLight)
+        
+        let visualEffectView = UIVisualEffectView(effect: blurEffect)
+        visualEffectView.frame = seperator.bounds
+        visualEffectView.isUserInteractionEnabled = false
+        seperator.addSubview(visualEffectView)
+        return seperator
+    }
+    
+    func setupButtons(alertViewFrame : CGRect){
+        
+        guard !hideAllButtons else{
+            return
+        }
+        
+        // View only contains DONE/DISMISS Button
+        if !hideDoneButton, numberOfButtons == 0 {
+            let doneButton = self.setupDoneButton(fontSize: 18)
+            
+            doneButton.frame = CGRect(x: 0,
+                                      y: alertViewFrame.size.height - 45,
+                                      width: alertViewFrame.size.width,
+                                      height: 45)
+            
+            
+            alertView!.addSubview(doneButton)
+            return
+        }
+        
+        // View also contains OTHER (One) Button
+        if numberOfButtons == 1, let otherButton = self.setupDifferentButton(index: 0) {
+            
+            // Just add other button
+            if hideDoneButton{
+                otherButton.frame = CGRect(x: 0,
+                                           y: alertViewFrame.size.height - 45,
+                                           width: alertViewFrame.size.width,
+                                           height: 45)
+                alertView!.addSubview(otherButton)
+                return
+            }
+            
+            // Render both buttons
+            otherButton.frame = CGRect(x: 0,
+                                       y: alertViewFrame.size.height - 45,
+                                       width: alertViewFrame.size.width/2,
+                                       height: 45)
+            
+            //Render Done buttons
+            let doneButton = self.setupDoneButton(fontSize: 16)
+            
+            doneButton.frame = CGRect(x: alertViewFrame.size.width/2,
+                                      y: alertViewFrame.size.height - 45,
+                                      width: alertViewFrame.size.width/2,
+                                      height: 45)
+            
+            let horizontalSeparator = self.setupSeperator(frame: CGRect(x: alertViewFrame.size.width/2 - 1,
+                                                                      y: otherButton.frame.origin.y - 2,
+                                                                      width: 2,
+                                                                      height: 45))
+            
+            alertView!.addSubview(doneButton)
+            alertView!.addSubview(horizontalSeparator)
+            
+            
+            
+            return
+        }
+        
+        // If I can create two buttons, do so and set them up
+        guard let firstButton = self.setupDifferentButton(index: 0), let secondButton = self.setupDifferentButton(index: 1) else{
+            return
+        }
+
+        if hideDoneButton {
+            firstButton.frame = CGRect(x: 0,
+                                       y: alertViewFrame.size.height - 45,
+                                       width: alertViewFrame.size.width/2,
+                                       height: 45)
+        }else {
+            firstButton.frame = CGRect(x: 0,
+                                       y: alertViewFrame.size.height - 135,
+                                       width: alertViewFrame.size.width,
+                                       height: 45)
+        }
+        
+        let firstSeperator = self.setupSeperator(frame: CGRect(x: 0,
+                                                               y: firstButton.frame.origin.y - 2,
+                                                               width: alertViewFrame.size.width,
+                                                               height: 2))
+        
+        var secondSeperator = UIView(frame: .zero)
+
+    
+        
+        if !hideDoneButton {
+            secondButton.frame = CGRect(x: 0,
+                                        y: alertViewFrame.size.height - 90,
+                                        width: alertViewFrame.size.width,
+                                        height: 45)
+
+            secondSeperator = self.setupSeperator(frame: CGRect(x: 0,
+                                                                y: secondButton.frame.origin.y - 2,
+                                                                width: alertViewFrame.size.width,
+                                                                height: 2))
+            
+            let doneButton = self.setupDoneButton(fontSize: 18)
+            
+            doneButton.frame = CGRect(x: 0,
+                                      y: alertViewFrame.size.height - 45,
+                                      width: alertViewFrame.size.width,
+                                      height: 45)
+            
+            alertView!.addSubview(doneButton)
+        }else {
+            // Set proper frames for no donebutton
+            secondButton.frame = CGRect(x: alertViewFrame.size.width/2,
+                                        y: alertViewFrame.size.height - 45,
+                                        width: alertViewFrame.size.width/2,
+                                        height: 45)
+            
+            secondSeperator = self.setupSeperator(frame: CGRect(x: alertViewFrame.size.width/2 - 1,
+                                                                y: secondButton.frame.origin.y,
+                                                                width: 2,
+                                                                height: 45))
+        }
+        
+        alertView!.addSubview(firstButton)
+        alertView!.addSubview(secondButton)
+        alertView!.addSubview(firstSeperator)
+        alertView!.addSubview(secondSeperator)
+    }
+    
     public override func draw(_ rect: CGRect) {
         
         alpha = 0
@@ -305,192 +478,7 @@ public class FCAlertView: UIView {
         
         //  Button(s) View - Section containing all Buttons
         
-        // View only contains DONE/DISMISS Button
-        if(!hideAllButtons && !hideDoneButton && numberOfButtons == 0) {
-            let doneButton = UIButton(type: .system)
-            if let colorScheme = self.colorScheme {
-                doneButton.backgroundColor = colorScheme
-                doneButton.tintColor = .white
-            }else{
-                doneButton.backgroundColor = .white
-            }
-            
-            doneButton.frame = CGRect(x: 0,
-                                      y: alertViewFrame.size.height - 45,
-                                      width: alertViewFrame.size.width,
-                                      height: 45)
-            doneButton.setTitle(doneTitle, for: .normal)
-            doneButton.addTarget(self, action: #selector(self.donePressed(sender:)), for: .touchUpInside)
-            doneButton.titleLabel!.font = UIFont.systemFont(ofSize: 18, weight: UIFont.Weight.medium)
-            
-            
-            alertView!.addSubview(doneButton)
-        }
-        else if !hideAllButtons && numberOfButtons == 1 { // View also contains OTHER (One) Button
-            
-            // Render user button
-            let otherButton = UIButton(type: .system)
-            otherButton.backgroundColor = .white
-            
-            otherButton.setTitle(buttonTitles![0], for: .normal)
-            otherButton.addTarget(self, action: #selector(self.handleButton(sender:)), for: .touchUpInside)
-            otherButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: UIFont.Weight.regular)
-            otherButton.tintColor = colorScheme
-            otherButton.titleLabel?.adjustsFontSizeToFitWidth = true
-            otherButton.titleLabel?.minimumScaleFactor = 0.8
-            
-            
-            if !hideDoneButton {
-                
-                otherButton.frame = CGRect(x: 0,
-                                           y: alertViewFrame.size.height - 45,
-                                           width: alertViewFrame.size.width/2,
-                                           height: 45)
-                
-                //Render Done buttons
-                let doneButton = UIButton(type: .system)
-                
-                if let colorScheme = self.colorScheme {
-                    doneButton.backgroundColor = colorScheme
-                    doneButton.tintColor = .white
-                }else{
-                    doneButton.backgroundColor = .white
-                }
-                
-                doneButton.frame = CGRect(x: alertViewFrame.size.width/2,
-                                          y: alertViewFrame.size.height - 45,
-                                          width: alertViewFrame.size.width/2,
-                                          height: 45)
-                doneButton.setTitle(doneTitle, for: .normal)
-                doneButton.addTarget(self, action: #selector(self.donePressed(sender:)), for: .touchUpInside)
-                doneButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: UIFont.Weight.medium)
-                
-                let horizontalSeparator = UIView(frame: CGRect(x: alertViewFrame.size.width/2 - 1,
-                                                               y: otherButton.frame.origin.y - 2,
-                                                               width: 2,
-                                                               height: 45))
-                horizontalSeparator.backgroundColor = UIColor(white: 100/255, alpha: 1)
-                
-                let blurEffect = UIBlurEffect(style: .extraLight)
-                
-                let visualEffectView = UIVisualEffectView(effect: blurEffect)
-                visualEffectView.frame = horizontalSeparator.bounds
-                visualEffectView.isUserInteractionEnabled = false
-                horizontalSeparator.addSubview(visualEffectView)
-                
-                alertView!.addSubview(doneButton)
-                alertView!.addSubview(horizontalSeparator)
-            }else{
-                otherButton.frame = CGRect(x: 0,
-                                           y: alertViewFrame.size.height - 45,
-                                           width: alertViewFrame.size.width,
-                                           height: 45)
-            }
-            
-            alertView!.addSubview(otherButton)
-            
-        }else if(!hideAllButtons && numberOfButtons >= 2){
-            let firstButton = UIButton(type: .system)
-            firstButton.backgroundColor = .white
-            
-            if hideDoneButton {
-                firstButton.frame = CGRect(x: 0,
-                                           y: alertViewFrame.size.height - 45,
-                                           width: alertViewFrame.size.width/2,
-                                           height: 45)
-            }else {
-                firstButton.frame = CGRect(x: 0,
-                                           y: alertViewFrame.size.height - 135,
-                                           width: alertViewFrame.size.width,
-                                           height: 45)
-            }
-            
-            firstButton.setTitle(buttonTitles![0], for: .normal)
-            firstButton.addTarget(self, action: #selector(self.handleButton(sender:)), for: .touchUpInside)
-            firstButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: UIFont.Weight.regular)
-            firstButton.tintColor = colorScheme
-            firstButton.titleLabel?.adjustsFontSizeToFitWidth = true
-            firstButton.titleLabel?.minimumScaleFactor = 0.8
-            firstButton.tag = 0
-            
-            let secondButton = UIButton(type: .system)
-            secondButton.backgroundColor = .white
-            secondButton.setTitle(buttonTitles![1], for: .normal)
-            secondButton.addTarget(self, action: #selector(self.handleButton(sender:)), for: .touchUpInside)
-            secondButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: UIFont.Weight.regular)
-            secondButton.tintColor = colorScheme
-            secondButton.titleLabel?.adjustsFontSizeToFitWidth = true
-            secondButton.titleLabel?.minimumScaleFactor = 0.8
-            secondButton.tag = 0
-            
-            let firstSeparator = UIView(frame: CGRect(x: 0,
-                                                      y: firstButton.frame.origin.y - 2,
-                                                      width: alertViewFrame.size.width,
-                                                      height: 2))
-            firstSeparator.backgroundColor = UIColor(white: 100/255, alpha: 1)
-            
-            let secondSeparator = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-            secondSeparator.backgroundColor = UIColor(white: 100/255, alpha: 1)
-            
-            let blurEffect = UIBlurEffect(style: .extraLight)
-            
-            let visualEffectView = UIVisualEffectView(effect: blurEffect)
-            visualEffectView.frame = firstSeparator.bounds
-            visualEffectView.isUserInteractionEnabled = false
-            firstSeparator.addSubview(visualEffectView)
-            
-            let visualEffectView2 = UIVisualEffectView(effect: blurEffect)
-            visualEffectView2.isUserInteractionEnabled = false
-            secondSeparator.addSubview(visualEffectView2)
-            
-            if !hideDoneButton {
-                secondButton.frame = CGRect(x: 0,
-                                            y: alertViewFrame.size.height - 90,
-                                            width: alertViewFrame.size.width,
-                                            height: 45)
-                secondSeparator.frame = CGRect(x: 0,
-                                               y: secondButton.frame.origin.y - 2,
-                                               width: alertViewFrame.size.width,
-                                               height: 2)
-                let doneButton = UIButton(type: .system)
-                
-                if let colorScheme = colorScheme {
-                    doneButton.backgroundColor = colorScheme
-                    doneButton.tintColor = .white
-                }else{
-                    doneButton.backgroundColor = .white
-                }
-                
-                doneButton.frame = CGRect(x: 0,
-                                          y: alertViewFrame.size.height - 45,
-                                          width: alertViewFrame.size.width,
-                                          height: 45)
-                doneButton.setTitle(doneTitle, for: .normal)
-                doneButton.addTarget(self, action: #selector(self.donePressed(sender:)), for: .touchUpInside)
-                doneButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: UIFont.Weight.medium)
-                
-                alertView!.addSubview(doneButton)
-            }else {
-                // Set proper frames for no donebutton
-                secondButton.frame = CGRect(x: alertViewFrame.size.width/2,
-                                            y: alertViewFrame.size.height - 45,
-                                            width: alertViewFrame.size.width/2,
-                                            height: 45)
-                
-                secondSeparator.frame = CGRect(x: alertViewFrame.size.width/2 - 1,
-                                               y: secondButton.frame.origin.y,
-                                               width: 2,
-                                               height: 45)
-            }
-            
-            visualEffectView2.frame = secondSeparator.bounds
-            
-            
-            alertView!.addSubview(firstButton)
-            alertView!.addSubview(secondButton)
-            alertView!.addSubview(firstSeparator)
-            alertView!.addSubview(secondSeparator)
-        }
+        self.setupButtons(alertViewFrame: alertViewFrame)
         
         
         circleLayer.path = UIBezierPath(ovalIn: CGRect(x: alertViewContents!.frame.size.width/2 - 30.0, y: -30.0, width: 60.0, height: 60.0)).cgPath
